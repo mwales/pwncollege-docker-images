@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1-labs
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 SHELL ["/bin/bash", "-ceov", "pipefail"]
 
@@ -56,7 +56,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libglib2.0-dev
         libgmp-dev
         libini-config-dev
-        libncurses5:i386
+        libncurses6:i386
         libpcap-dev
         libpixman-1-dev
         libseccomp-dev
@@ -86,8 +86,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         binutils
         binutils-aarch64-linux-gnu
         binwalk
+        bsdgames
         bsdmainutils
         bsdutils
+        cowsay
         debianutils
         diffutils
         ed
@@ -107,6 +109,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         gdb
         gdb-multiarch
         gedit
+        ghex
         genisoimage
         gnupg-utils
         gprolog
@@ -120,12 +123,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         jq
         keyutils
         kmod
+        kompare
         less
         libapache2-mod-php
         libc6-arm64-cross
         libc6-dev-arm64-cross
+        capstone-tool
+        libcapstone-dev
         ltrace
         mysql-server
+        nano
         neovim
         net-tools
         netcat-openbsd
@@ -144,14 +151,17 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         qemu-system-x86
         qemu-user
         qemu-utils
-        racket
+        ristretto
         rsync
-        sagemath
         screen
         silversearcher-ag
         socat
         sqlite3
+        steghide
+        stegsnow
+        outguess
         strace
+        tcpdump
         tmux
         toilet-fonts
         valgrind
@@ -160,66 +170,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         whiptail
         wireshark
         zip
+        rar
+        unrar
         zsh
 EOF
-
-RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
-
-################################################################################
-
-# linux kernel
-
-RUN <<EOF
-    mkdir /opt/linux
-    wget -O - https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/linux-5.4.tar.gz | tar xzC /opt/linux
-    cd /opt/linux/linux-5.4
-    make defconfig
-EOF
-
-RUN awk '{$1=$1};1' >> /opt/linux/linux-5.4/.config <<EOF
-    CONFIG_9P_FS=y
-    CONFIG_9P_FS_POSIX_ACL=y
-    CONFIG_9P_FS_SECURITY=y
-    CONFIG_BALLOON_COMPACTION=y
-    CONFIG_CRYPTO_DEV_VIRTIO=y
-    CONFIG_DEBUG_FS=y
-    CONFIG_DEBUG_INFO=y
-    CONFIG_DEBUG_INFO_BTF=y
-    CONFIG_DEBUG_INFO_DWARF4=y
-    CONFIG_DEBUG_INFO_REDUCED=n
-    CONFIG_DEBUG_INFO_SPLIT=n
-    CONFIG_DEVPTS_FS=y
-    CONFIG_DRM_VIRTIO_GPU=y
-    CONFIG_FRAME_POINTER=y
-    CONFIG_GDB_SCRIPTS=y
-    CONFIG_HW_RANDOM_VIRTIO=y
-    CONFIG_HYPERVISOR_GUEST=y
-    CONFIG_IKCONFIG=y
-    CONFIG_IKCONFIG_PROC=y
-    CONFIG_NET_9P=y
-    CONFIG_NET_9P_DEBUG=n
-    CONFIG_NET_9P_VIRTIO=y
-    CONFIG_PARAVIRT=y
-    CONFIG_PCI=y
-    CONFIG_PCI_HOST_GENERIC=y
-    CONFIG_USER_NS=y
-    CONFIG_VIRTIO_BALLOON=y
-    CONFIG_VIRTIO_BLK=y
-    CONFIG_VIRTIO_BLK_SCSI=y
-    CONFIG_VIRTIO_CONSOLE=y
-    CONFIG_VIRTIO_INPUT=y
-    CONFIG_VIRTIO_NET=y
-    CONFIG_VIRTIO_PCI=y
-    CONFIG_VIRTIO_PCI_LEGACY=y
-EOF
-
-RUN <<EOF
-    cd /opt/linux/linux-5.4
-    make -j$(nproc) bzImage
-    ln -sf $PWD/arch/x86/boot/bzImage ../bzImage
-    ln -sf $PWD/vmlinux ../vmlinux
-EOF
-
 ################################################################################
 
 # gdb
@@ -233,53 +187,13 @@ RUN <<EOF
 
     git clone --depth 1 https://github.com/jerdna-regeiz/splitmind /opt/splitmind
 
-    git clone --depth 1 https://github.com/nccgroup/libslub /opt/libslub
-    cd /opt/libslub
-    pip install -r requirements.txt
-
-    git clone --depth 1 --recurse-submodules https://github.com/zolutal/gdb-pt-dump /opt/pt-dump
-
-    git clone --depth 1 --recurse-submodules https://github.com/zolutal/kropr /opt/kropr
-    cd /opt/kropr
-    cargo install --path . --root /tmp
-    mv /tmp/bin/ropr /usr/bin/kropr
-    chmod +x /usr/bin/kropr
     ln -sf /home/hacker/.gdbinit /root/.gdbinit
 EOF
 
 ################################################################################
 
 RUN <<EOF
-    git clone --depth 1 https://github.com/the-tcpdump-group/tcpdump /opt/tcpdump
-    cd /opt/tcpdump
-    ./autogen.sh
-    ./configure
-    make install
-EOF
-
-RUN <<EOF
-    git clone https://github.com/capstone-engine/capstone /opt/capstone
-    cd /opt/capstone
-    git checkout 0a67596
-    make
-    make install
-    rm -rf /opt/capstone
-EOF
-
-RUN <<EOF
     wget -q -O - https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-linux64.tar.gz | tar xvz -C /usr/local/bin
-EOF
-
-RUN <<EOF
-    VERSION="busybox-1.33.2"
-    mkdir /opt/busybox && cd "$_"
-    wget -q -O - "https://busybox.net/downloads/${VERSION}.tar.bz2" | tar xvj
-    pushd "${VERSION}"
-    make defconfig
-    sed -e 's/.*CONFIG_STATIC .*/CONFIG_STATIC=y/' -i .config
-    make -j$(nproc) install
-    popd
-    ln -s "${VERSION}/_install" /opt/busybox/fs
 EOF
 
 RUN <<EOF
@@ -302,22 +216,28 @@ EOF
 
 ################################################################################
 
-# python pip
+# python pip (formerly pip packages)
 
-RUN xargs pip install --force-reinstall <<EOF
-    angr
-    asteval
-    fastecdsa
-    flask
-    git+https://github.com/Gallopsled/pwntools#egg=pwntools
-    git+https://github.com/pwncollege/dojjail#egg=dojjail
-    git+https://github.com/secdev/scapy#egg=scapy
-    jupyter
-    psutil
-    pycryptodome
-    r2pipe
-    requests
-    selenium
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && xargs apt-get install --no-install-recommends -yqq <<EOF && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+        python3-asteval
+        python3-capstone
+        python3-flask
+        python3-pwntools
+        python-pwntools-doc
+        python3-scapy
+        python3-jupyter-core
+        python3-jupyter-client
+        python3-jupyter-console
+        python3-jupyter-server
+        python3-psutil
+        python3-pycryptodome
+        python3-requests
+        python3-selenium
+        fceux
+        ares
 EOF
 
 RUN ln -sf /usr/bin/ipython3 /usr/bin/ipython
