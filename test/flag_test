@@ -1,0 +1,4 @@
+#!/usr/bin/exec-suid -- /bin/bash
+
+cat /flag
+
