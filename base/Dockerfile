@@ -133,7 +133,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         capstone-tool
         libcapstone-dev
         ltrace
-        meld
         mysql-server
         nano
         neovim
