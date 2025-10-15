@@ -48,6 +48,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         g++-multilib
         gcc-multilib
         git
+        gitk
         libc6-dev-i386
         libc6:i386
         libedit-dev
@@ -79,6 +80,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && xargs apt-get install --no-install-recommends -yqq <<EOF && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+        abiword
         apache2
         arping
         bash-builtins
@@ -131,6 +133,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         capstone-tool
         libcapstone-dev
         ltrace
+        meld
         mysql-server
         nano
         neovim

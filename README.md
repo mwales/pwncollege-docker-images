@@ -21,7 +21,7 @@ we don't need to install these tools ourselves.
 
 * Binary Ninja
 * Ghidra
-* IDA Proo
+* IDA Pro
 
 # Package Updates
 
@@ -37,6 +37,8 @@ we don't need to install these tools ourselves.
 [x] rar and unrar
 [x] steghide, stegsnow, outguess
 [x] meld (lightweight diff viewer.  kompare if distro was Qt based)
+[x] gitk
+[x] abiword (100mb versus 1GB almost for libreoffice)
 
 ## Things that would be nice to have, but will pass for now
 
